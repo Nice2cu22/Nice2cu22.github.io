@@ -1,0 +1,454 @@
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>OS-Lab5 | 小熊猫为了春日半岛写代码</title><meta name="author" content="Nice2cu"><meta name="copyright" content="Nice2cu"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="#OS-Lab5 OS_Lab5感觉lab5主要就是介绍了一个文件系统，用来抽象地管理磁盘等外设。目前感觉比较困难的地方应该是很多相似地函数跨越了多个系统层级，不是很分得清楚，，，但是是最后一次上机了，还是总结一下😋 实验目的：  了解文件系统的基本概念和作用。 了解普通磁盘的基本结构和读写方式。 了解实现设备驱动的方法。 掌握并实现文件系统服务的基本操作。 了解微内核的基本设计思想和结构。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OS-Lab5">
+<meta property="og:url" content="http://nice2cu22.github.io/2025/05/27/OS_Lab5/index.html">
+<meta property="og:site_name" content="小熊猫为了春日半岛写代码">
+<meta property="og:description" content="#OS-Lab5 OS_Lab5感觉lab5主要就是介绍了一个文件系统，用来抽象地管理磁盘等外设。目前感觉比较困难的地方应该是很多相似地函数跨越了多个系统层级，不是很分得清楚，，，但是是最后一次上机了，还是总结一下😋 实验目的：  了解文件系统的基本概念和作用。 了解普通磁盘的基本结构和读写方式。 了解实现设备驱动的方法。 掌握并实现文件系统服务的基本操作。 了解微内核的基本设计思想和结构。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://nice2cu22.github.io/img/top-default.jpg">
+<meta property="article:published_time" content="2025-05-27T15:01:31.000Z">
+<meta property="article:modified_time" content="2025-05-27T15:01:39.979Z">
+<meta property="article:author" content="Nice2cu">
+<meta property="article:tag" content="BUAA_OS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://nice2cu22.github.io/img/top-default.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "OS-Lab5",
+  "url": "http://nice2cu22.github.io/2025/05/27/OS_Lab5/",
+  "image": "http://nice2cu22.github.io/img/top-default.jpg",
+  "datePublished": "2025-05-27T15:01:31.000Z",
+  "dateModified": "2025-05-27T15:01:39.979Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Nice2cu",
+      "url": "http://nice2cu22.github.io/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://nice2cu22.github.io/2025/05/27/OS_Lab5/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Failed',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'OS-Lab5',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="web_bg" style="background-image: url(/img/background.jpg);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/my-avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">1</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-book-open"></i><span> 余光记</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-leaf"></i><span> 咒语图鉴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 词语盒</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-address-book"></i><span> 友人帐</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/top-default.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">小熊猫为了春日半岛写代码</span></a><a class="nav-page-title" href="/"><span class="site-name">OS-Lab5</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-book-open"></i><span> 余光记</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-leaf"></i><span> 咒语图鉴</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 词语盒</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-address-book"></i><span> 友人帐</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">OS-Lab5</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2025-05-27T15:01:31.000Z" title="Created 2025-05-27 23:01:31">2025-05-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2025-05-27T15:01:39.979Z" title="Updated 2025-05-27 23:01:39">2025-05-27</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>#OS-Lab5</p>
+<h1 id="OS-Lab5"><a href="#OS-Lab5" class="headerlink" title="OS_Lab5"></a>OS_Lab5</h1><p>感觉lab5主要就是介绍了一个文件系统，用来抽象地管理磁盘等外设。目前感觉比较困难的地方应该是很多相似地函数跨越了多个系统层级，不是很分得清楚，，，但是是最后一次上机了，还是总结一下😋</p>
+<p>实验目的：</p>
+<ol>
+<li>了解文件系统的基本概念和作用。</li>
+<li>了解普通磁盘的基本结构和读写方式。</li>
+<li>了解实现设备驱动的方法。</li>
+<li>掌握并实现文件系统服务的基本操作。</li>
+<li>了解微内核的基本设计思想和结构。</li>
+</ol>
+<h3 id="1-文件系统概述"><a href="#1-文件系统概述" class="headerlink" title="1.文件系统概述"></a>1.文件系统概述</h3><h4 id="1-1文件系统的设计与实现"><a href="#1-1文件系统的设计与实现" class="headerlink" title="1.1文件系统的设计与实现"></a>1.1文件系统的设计与实现</h4><blockquote>
+<p><strong>📕文件系统</strong>：（为了便于管理和访问存放在外部存储设备上的数据）在文件系统中，文件是数据存储和访问的基本单位。</p>
+</blockquote>
+<ul>
+<li><strong>外部存储设备驱动</strong>：通过<strong>系统调用</strong>的方式陷入内核，对磁盘镜像进行读写操作。</li>
+<li><strong>文件系统结构</strong>：<code>fs</code> 目录下存放的是文件系统服务程序的代码；而 <code>user/lib</code> 目录中的 <code>file.c</code>、<code>fd.c</code>、<code>fsipc.c</code> 等文件则存放了文件系统的用户库。文件系统服务进程和其他用户进程之间使用 <strong>IPC机制</strong>进行通信</li>
+<li><strong>文件系统的用户接口</strong>：通过一个用户态的文件系统服务来实现</li>
+</ul>
+<blockquote>
+<p><strong>整体代码框架：</strong></p>
+</blockquote>
+<ul>
+<li><strong>tools</strong> 目录中存放的是构建时辅助工具的代码。我们将在其中实现 fsformat 工具，并借助它来创建磁盘镜像。</li>
+<li><strong>fs</strong> 目录中存放的是文件系统服务进程的代码。<code>fs.c</code> 中实现文件系统的基本功能函数，<code>ide.c</code> 中通过系统调用与磁盘镜像进行交互，主干函数在 <code>serv.c</code> 中。通过 <strong>IPC 通信</strong>与用户进程 <code>user/lib/fsipc.c</code> 内的通信函数进行交互。</li>
+<li><strong>user&#x2F;lib</strong> 目录下存放了用户程序的库函数。<code>fsipc.c</code> 实现了与文件系统服务进程的交互，<code>file.c</code> 实现了文件系统的用户接口，<code>fd.c</code> 中实现了文件描述符。</li>
+</ul>
+<blockquote>
+<p>区分一个很混淆的概念：</p>
+</blockquote>
+<p><strong><code>dev_\*</code> 是通用设备接口</strong>，代表“我不关心你是哪种设备”；<br><strong><code>ide_\*</code> 是具体的磁盘（IDE 硬盘）驱动函数</strong>，专门处理磁盘操作。</p>
+<p>&#x2F;&#x2F;我觉得不是我的问题，为什么指导书就不能把这个写出来呢？写得全是英文的缩写方法，本来就难以理解他们的功能，难道名称不应该要让人易懂一点吗？算了不骂了。</p>
+<h3 id="2-磁盘驱动"><a href="#2-磁盘驱动" class="headerlink" title="2.磁盘驱动"></a>2.磁盘驱动</h3><h4 id="2-1-内存映射"><a href="#2-1-内存映射" class="headerlink" title="2.1 内存映射"></a>2.1 内存映射</h4><p>把指导书里的内容转成一系列人话：</p>
+<h5 id="1-“设备是怎么和-CPU-通信的？”"><a href="#1-“设备是怎么和-CPU-通信的？”" class="headerlink" title="1. “设备是怎么和 CPU 通信的？”"></a>1. “设备是怎么和 CPU 通信的？”</h5><blockquote>
+<p>“每一种外设都是通过读写设备上的寄存器来进行数据通信”</p>
+</blockquote>
+<h5 id="2-“外设寄存器是怎么找到的？”"><a href="#2-“外设寄存器是怎么找到的？”" class="headerlink" title="2. “外设寄存器是怎么找到的？”"></a>2. “外设寄存器是怎么找到的？”</h5><blockquote>
+<p>“这些寄存器被映射到指定的物理地址空间”</p>
+</blockquote>
+<ul>
+<li>每个设备在内存里有一个“固定的地址范围”，叫<strong>内存映射 I&#x2F;O</strong>。<ul>
+<li>比如：串口 console 在 <code>0x180003F8</code>，IDE 控制器在 <code>0x180001F0</code></li>
+</ul>
+</li>
+<li><strong>你只要对这个地址读写，相当于在操作这个设备！</strong></li>
+</ul>
+<h5 id="3-“MIPS-架构用哪块地址空间来访问设备？”"><a href="#3-“MIPS-架构用哪块地址空间来访问设备？”" class="headerlink" title="3. “MIPS 架构用哪块地址空间来访问设备？”"></a>3. “MIPS 架构用哪块地址空间来访问设备？”</h5><blockquote>
+<p>“使用 kseg1 段… 不经过 MMU，也不用缓存”</p>
+</blockquote>
+<p>然后指导书举了一个很丑的串口驱动的例子，大概是为了引出磁盘驱动吧，但是真的很丑。意思就是：</p>
+<p> <strong>核心不同在于 —— 串口驱动写在内核里，而磁盘驱动写在“用户态”！</strong>所以对于设备的读写必须通过<strong>系统调用</strong>来实现（<code>sys_write_dev</code> 和 <code>sys_read_dev</code>）。</p>
+<p><strong>Exercise 5.1</strong> 完成 sys_write_dev 函数以及sys_read_dev 函数的实现。</p>
+<p><code>sys_write_dev(u_int va, u_int pa, u_int len)</code>：<strong>从用户空间（va）拿一段数据，写入到设备的物理地址（pa）里</strong>。</p>
+<p><code>sys_read_dev(u_int va, u_int pa, u_int len)</code>：<strong>从设备的物理地址（pa）拿一段数据，写入到用户空间（va）里</strong>。</p>
+<p><strong>Exercise 5.2</strong> 在 user&#x2F;lib&#x2F;syscall_lib.c 中完成用户态的相应系统调用的接口。</p>
+<h4 id="2-2-IDE磁盘"><a href="#2-2-IDE磁盘" class="headerlink" title="2.2 IDE磁盘"></a>2.2 IDE磁盘</h4><p>这段话就讲了：</p>
+<blockquote>
+<p>磁盘有两种寻址方法，CHS(柱面-磁头-扇区) 是物理结构的老方法，复杂且不便用；LBA 是线性编号方式，简单方便，实验里我们就用这个，最多能访问128GB，系统通过一组寄存器告诉设备哪个扇区要操作。</p>
+</blockquote>
+<p>在我们的实验中，扇区编号有 28 位，因此最多可以寻址 2^28 个扇区，即 128 GB 的磁盘空间。</p>
+<h4 id="2-3-驱动程序编写"><a href="#2-3-驱动程序编写" class="headerlink" title="2.3 驱动程序编写"></a>2.3 驱动程序编写</h4><p>这段话就讲了：</p>
+<blockquote>
+<p>读写磁盘就是读写设备寄存器和数据缓冲区，操作前得确保设备不忙</p>
+<p><code>wait_ide</code> 函数就是帮你轮询检查设备忙闲状态</p>
+<p>物理地址转换成内核虚拟地址是必要的，否则没法操作寄存器</p>
+<p>这些步骤串起来，就能安全、正确地读写磁盘一个扇区</p>
+</blockquote>
+<p>然后他举了一个让人迷惑的<code>read_sector</code>和<code>write_sector</code>函数，然后又让我们自己写<code>ide_read</code>和<code>ide_write</code>函数。这两函数功能难道不一样？你想做什么？</p>
+<p>后面才发现，这两个函数 <code>read_sector</code> 和 <code>ide_read</code> 做的是<strong>类似的事：从 IDE 磁盘中读取扇区数据</strong>。</p>
+<p><code>read_sector</code> 是“<strong>内核给内核自己用</strong>的”，能直接访问设备地址；</p>
+<p><code>ide_read</code> 是“<strong>用户程序用的接口</strong>”，必须通过系统调用和内核交互才能读磁盘。</p>
+<p>好了，那<strong>Exercise 5.3</strong>就是补全这个<code>ide_read</code>和<code>ide_write</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//diskno：读哪块磁盘 secno:从哪个扇区开始 dst:读取的数据存放的位置 nsecs:要读几个扇区</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">ide_read</span><span class="params">(u_int diskno, u_int secno, <span class="type">void</span> *dst, u_int nsecs)</span> &#123;</span><br><span class="line">	<span class="type">uint8_t</span> temp;</span><br><span class="line">	u_int offset = <span class="number">0</span>, max = nsecs + secno;</span><br><span class="line">	panic_on(diskno &gt;= <span class="number">2</span>);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (secno &lt; max) &#123;</span><br><span class="line">		temp = wait_ide_ready();</span><br><span class="line">		<span class="comment">// 写读一个扇区</span></span><br><span class="line">		temp = <span class="number">1</span>;</span><br><span class="line">		panic_on(syscall_write_dev(&amp;temp, MALTA_IDE_NSECT, <span class="number">1</span>));</span><br><span class="line">		<span class="comment">// 写扇区编号低8位</span></span><br><span class="line">		temp = secno &amp; <span class="number">0xff</span>;</span><br><span class="line">		panic_on(syscall_write_dev(&amp;temp, MALTA_IDE_LBAL, <span class="number">1</span>));</span><br><span class="line">		<span class="comment">// 写中间8位</span></span><br><span class="line">		temp = (secno &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xff</span>;</span><br><span class="line">		panic_on(syscall_write_dev(&amp;temp, MALTA_IDE_LBAM, <span class="number">1</span>));</span><br><span class="line">		<span class="comment">// 写高8位</span></span><br><span class="line">		temp = (secno &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xff</span>;</span><br><span class="line">		panic_on(syscall_write_dev(&amp;temp, MALTA_IDE_LBAH, <span class="number">1</span>));</span><br><span class="line">        <span class="comment">// 写最后4位+模式+盘号</span></span><br><span class="line">		temp = ((secno &gt;&gt; <span class="number">24</span>) &amp; <span class="number">0x0f</span>) | MALTA_IDE_LBA | (diskno &lt;&lt; <span class="number">4</span>);</span><br><span class="line">		panic_on(syscall_write_dev(&amp;temp, MALTA_IDE_DEVICE, <span class="number">1</span>));</span><br><span class="line">		<span class="comment">// 写“开始读”的状态</span></span><br><span class="line">		temp = MALTA_IDE_CMD_PIO_READ;</span><br><span class="line">		panic_on(syscall_write_dev(&amp;temp, MALTA_IDE_STATUS, <span class="number">1</span>));</span><br><span class="line">		<span class="comment">// 等待准备</span></span><br><span class="line">		temp = wait_ide_ready();</span><br><span class="line">		<span class="comment">// 开始读</span></span><br><span class="line">		<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; SECT_SIZE / <span class="number">4</span>; i++) &#123;</span><br><span class="line">			panic_on(syscall_read_dev(dst + offset + i * <span class="number">4</span>, MALTA_IDE_DATA, <span class="number">4</span>));</span><br><span class="line">		&#125;</span><br><span class="line">		panic_on(syscall_read_dev(&amp;temp, MALTA_IDE_STATUS, <span class="number">1</span>));</span><br><span class="line">		offset += SECT_SIZE;</span><br><span class="line">		secno += <span class="number">1</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>补充一个宏定义吧，感觉这个更加便于理解。</p>
+<table>
+<thead>
+<tr>
+<th>位数范围</th>
+<th>对应寄存器</th>
+<th>示例代码</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>secno[7:0]</td>
+<td>LBAL</td>
+<td><code>temp = secno &amp; 0xff;</code></td>
+</tr>
+<tr>
+<td>secno[15:8]</td>
+<td>LBAM</td>
+<td><code>temp = (secno &gt;&gt; 8) &amp; 0xff;</code></td>
+</tr>
+<tr>
+<td>secno[23:16]</td>
+<td>LBAH</td>
+<td><code>temp = (secno &gt;&gt; 16) &amp; 0xff;</code></td>
+</tr>
+<tr>
+<td>secno[27:24]</td>
+<td>DEVICE</td>
+<td><code>temp = ((secno &gt;&gt; 24) &amp; 0x0f)</code></td>
+</tr>
+</tbody></table>
+<p>实现了磁盘驱动，我们可以尝试对磁盘进行读写。<strong>第一部分到这就结束啦！</strong></p>
+<p>主要是实现了两类函数：<code>sys_write_dev</code> &amp; <code>sys_read_dev</code>和<code>ide_read</code>&amp;<code>ide_write</code></p>
+<p>主要是在用户态<code>ide_read</code>里系统调用<code>syscall_read_dev</code>，然后再在<code>sys_read_dev</code>中执行。</p>
+<h3 id="3-文件系统结构"><a href="#3-文件系统结构" class="headerlink" title="3.文件系统结构"></a>3.文件系统结构</h3><h4 id="3-1磁盘文件系统布局"><a href="#3-1磁盘文件系统布局" class="headerlink" title="3.1磁盘文件系统布局"></a>3.1磁盘文件系统布局</h4><p>这段话先讲了磁盘块是什么：</p>
+<blockquote>
+<p>操作系统不直接按扇区管理磁盘，而是把多个扇区组成一个磁盘块，简化操作。</p>
+<p>最开始的一个磁盘块（4096 字节）当作<strong>引导扇区和分区表</strong>使用。接下来的一个磁盘块作为<strong>超级块</strong></p>
+<p>超级块存了文件系统的关键信息，系统启动时会用到。</p>
+<p>文件系统用位图来管理磁盘空间的使用情况。</p>
+</blockquote>
+<p>然后引入<code>fsforma.c</code>这个文件：</p>
+<blockquote>
+<p><code>fsformat.c</code> 是“初始化阶段”的构建工具，<br> <code>fs.c</code> 是“运行时阶段”的核心文件系统逻辑。</p>
+</blockquote>
+<p><strong>Exercise 5.4</strong> 完成 fs&#x2F;fs.c 中的 free_block 函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">free_block</span><span class="params">(u_int blockno)</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> (blockno == <span class="number">0</span> || blockno &gt;= super-&gt;s_nblocks) &#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//这一步我还不知道为啥，但我也不是很想看。。之后再说吧</span></span><br><span class="line">	bitmap[blockno / <span class="number">32</span>] |= <span class="number">1</span> &lt;&lt; (blockno &amp; <span class="number">0x1f</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-2-文件系统详细结构"><a href="#3-2-文件系统详细结构" class="headerlink" title="3.2 文件系统详细结构"></a>3.2 文件系统详细结构</h4><p>又开始说人话（其实每次写这个都很想骂人，为什么指导书不能说人话┑(￣Д ￣)┍）：</p>
+<h5 id="🧱-一、什么是文件控制块（struct-File）？"><a href="#🧱-一、什么是文件控制块（struct-File）？" class="headerlink" title="🧱 一、什么是文件控制块（struct File）？"></a>🧱 一、什么是文件控制块（<code>struct File</code>）？</h5><p>它是操作系统用来<strong>描述和管理文件的关键数据结构</strong>，每个文件或目录都有一个对应的 <code>File</code> 结构体：</p>
+<ul>
+<li><code>f_name</code>：文件名（最多 128 字节）</li>
+<li><code>f_size</code>：文件大小（单位是字节）</li>
+<li><code>f_type</code>：文件类型（普通文件 or 目录）</li>
+<li><code>f_direct[10]</code>：10 个直接指针，<strong>指向磁盘上的数据块</strong></li>
+<li><code>f_indirect</code>：1 个间接指针，<strong>指向磁盘上的数据块</strong></li>
+<li><code>f_dir</code>：指向所属目录（只在内存中有效）</li>
+<li><code>f_pad</code>：结构体补齐字段，使多个 File 恰好填满一个磁盘块</li>
+</ul>
+<p><strong>Exercise 5.5</strong> 完成 fsformat.c 中的 create_file 函数</p>
+<blockquote>
+<p>在给定目录 <code>dirf</code> 中分配一个“空槽位”用于创建一个新的文件</p>
+</blockquote>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> File *<span class="title function_">create_file</span><span class="params">(<span class="keyword">struct</span> File *dirf)</span> &#123;</span><br><span class="line">	<span class="type">int</span> nblk = dirf-&gt;f_size / BLOCK_SIZE;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; nblk; ++i) &#123;</span><br><span class="line">		<span class="type">int</span> bno; </span><br><span class="line">		<span class="keyword">if</span> (i &lt; NDIRECT) &#123;</span><br><span class="line">			bno = dirf-&gt;f_direct[i];</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			bno = ((<span class="type">int</span> *)(disk[dirf-&gt;f_indirect].data))[i];</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">//这个磁盘块是目录文件（因为传进来的 dirf 是一个目录类型的文件控制块），它存的是目录下所有文件的文件控制块（File）。</span></span><br><span class="line">        <span class="comment">//所以需要把它当成 struct File[] 数组来遍历，而不是当普通字节来看。</span></span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">File</span> *<span class="title">blk</span> =</span> (<span class="keyword">struct</span> File *)(disk[bno].data);</span><br><span class="line">        </span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">struct</span> File *f = blk; f &lt; blk + FILE2BLK; ++f) &#123;</span><br><span class="line">			<span class="comment">//</span></span><br><span class="line">			<span class="keyword">if</span> (f-&gt;f_name[<span class="number">0</span>] == <span class="string">&#x27;\0&#x27;</span>) &#123;</span><br><span class="line">				<span class="keyword">return</span> f;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//如果找不到空位置怎么办？调用 make_link_block(dirf, nblk) 分配一个新的块，挂到目录 dirf 上去。</span></span><br><span class="line">	<span class="type">int</span> bno = make_link_block(dirf, nblk);</span><br><span class="line">	<span class="keyword">return</span> (<span class="keyword">struct</span> File *)(disk[bno].data);</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-3-块缓存"><a href="#3-3-块缓存" class="headerlink" title="3.3 块缓存"></a>3.3 块缓存</h4><p>总结人话：</p>
+<blockquote>
+<p>MOS 操作系统为了加快磁盘访问，在用户进程中划出一段虚拟地址空间（从 <code>0x10000000</code> 开始，总共 1GB），作为磁盘块的缓存区；磁盘块读入内存时就映射到这段空间里，以后访问就可以直接用内存访问，不用每次都去慢慢读磁盘。</p>
+</blockquote>
+<p>感觉和tlb有点类似：都是缓存机制，都是用“空间换时间”，但块缓存是 OS 层面的磁盘优化，TLB 是 CPU 层面的地址映射优化。</p>
+<p><strong>Exercise 5.6</strong> <code>fs/fs.c</code> 中的 <code>disk_addr</code> 函数用来计算指定磁盘块对应的虚存地址。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">disk_addr</span><span class="params">(u_int blockno)</span> &#123;</span><br><span class="line">	<span class="keyword">return</span> (<span class="type">void</span> *)(DISKMAP + blockno * BLOCK_SIZE);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Exercise 5.7</strong> 实现 <code>map_block</code> 函数和 <code>unmap_block</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">map_block</span><span class="params">(u_int blockno)</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> (block_is_mapped(blockno)) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> syscall_mem_alloc(<span class="number">0</span>, disk_addr(blockno), PTE_D);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">unmap_block</span><span class="params">(u_int blockno)</span> &#123;</span><br><span class="line">	<span class="type">void</span> *va;</span><br><span class="line">	va = block_is_mapped(blockno);</span><br><span class="line">    <span class="comment">//将这个块的内容从内存写回磁盘，防止数据丢失。</span></span><br><span class="line">	<span class="keyword">if</span> (!block_is_free(blockno) &amp;&amp; block_is_dirty(blockno)) &#123;</span><br><span class="line">		write_block(blockno);</span><br><span class="line">	&#125;</span><br><span class="line">	panic_on(syscall_mem_unmap(<span class="number">0</span>, va));</span><br><span class="line">    <span class="comment">//最后的断言：确认取消映射后，这个块真的没再被映射了。</span></span><br><span class="line">	user_assert(!block_is_mapped(blockno));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其他函数：</p>
+<p>read_block 函数和 write_block 函数用于读写磁盘块。read_block 函数将指定编号的磁盘块读入到内存中，首先检查这块磁盘块是否已经在内存中，如果不在，先分配一页物理内存，然后调用 ide_read 函数来读取磁盘上的数据到对应的虚存地址处。</p>
+<p>file_get_block 函数用于<strong>将某个指定的文件指向的磁盘块读入内存</strong>。</p>
+<p>在完成块缓存部分<strong>之后</strong>我们就可以实现文件系统中的一些文件操作了。</p>
+<p>（最开始想骂人因为觉得指导书根本没写我们又返回文件操作了，，直到我发现其实指导书写了，，。。但是我还是想骂人，因为他写得一点都不明显。。。。）</p>
+<p><strong>Exercise 5.8</strong> 补全 <code>dir_lookup</code> 函数，查找某个目录下是否存在指定的文件。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">dir_lookup</span><span class="params">(<span class="keyword">struct</span> File *dir, <span class="type">char</span> *name, <span class="keyword">struct</span> File **file)</span> &#123;</span><br><span class="line">	u_int nblock;</span><br><span class="line">	nblock = dir-&gt;f_size / BLOCK_SIZE;</span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; nblock; i++) &#123;</span><br><span class="line">		<span class="type">void</span> *blk;</span><br><span class="line">		try(file_get_block(dir, i, &amp;blk));</span><br><span class="line">		<span class="class"><span class="keyword">struct</span> <span class="title">File</span> *<span class="title">files</span> =</span> (<span class="keyword">struct</span> File *)blk;</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">struct</span> File *f = files; f &lt; files + FILE2BLK; ++f) &#123;</span><br><span class="line">			<span class="keyword">if</span> (<span class="built_in">strcmp</span>(name, f-&gt;f_name) == <span class="number">0</span>) &#123;</span><br><span class="line">				*file = f;</span><br><span class="line">				f-&gt;f_dir = dir;</span><br><span class="line">				<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> -E_NOT_FOUND;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第二部分至此也完成啦，下一步就是实现用户接口。</p>
+<h3 id="4-文件系统的用户接口"><a href="#4-文件系统的用户接口" class="headerlink" title="4 文件系统的用户接口"></a>4 文件系统的用户接口</h3><h4 id="4-1-文件描述符"><a href="#4-1-文件描述符" class="headerlink" title="4.1 文件描述符"></a>4.1 文件描述符</h4><h5 id="💡1-什么是文件描述符（fd）？"><a href="#💡1-什么是文件描述符（fd）？" class="headerlink" title="💡1. 什么是文件描述符（fd）？"></a>💡1. 什么是文件描述符（fd）？</h5><ul>
+<li>当用户程序要<strong>打开一个文件</strong>时，操作系统不会直接把文件暴露给你，而是给你一个编号（整数），这就是<strong>fd（文件描述符）</strong>。</li>
+<li>你可以用这个 fd 来<strong>读取、写入、关闭文件</strong>，操作系统会帮你完成真实的文件操作。</li>
+<li>它就像你在图书馆借书，拿到一个凭条（fd），以后你就凭这个凭条去读书、还书。</li>
+</ul>
+<h5 id="🧠2-文件描述符内部其实存了很多信息"><a href="#🧠2-文件描述符内部其实存了很多信息" class="headerlink" title="🧠2. 文件描述符内部其实存了很多信息"></a>🧠2. 文件描述符内部其实存了很多信息</h5><p>为了真正执行“打开”“读”“写”等操作，操作系统必须记录每个文件的：</p>
+<p>这些信息存在一个结构体里，比如这个：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">c复制编辑struct Fd &#123;</span><br><span class="line">  u_int fd_dev_id;   // 设备号（比如文件、终端、管道）</span><br><span class="line">  u_int fd_offset;   // 当前读写到哪了</span><br><span class="line">  u_int fd_omode;    // 打开方式</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h5 id="📦3-Filefd-是-Fd-的“升级版”"><a href="#📦3-Filefd-是-Fd-的“升级版”" class="headerlink" title="📦3. Filefd 是 Fd 的“升级版”"></a>📦3. Filefd 是 Fd 的“升级版”</h5><p>除了基础信息，有时候你还想保存更多，比如这个文件实际在磁盘上的信息（大小、目录等），于是就用一个更大的结构体 <code>Filefd</code>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">c复制编辑struct Filefd &#123;</span><br><span class="line">  struct Fd f_fd;     // 前面就是 Fd 的内容</span><br><span class="line">  u_int f_fileid;     // 文件ID</span><br><span class="line">  struct File f_file; // 文件本体信息（磁盘块等）</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这个 <code>Filefd</code> 就是把 <code>Fd</code> 当作开头，“扩展”了它。所以：</p>
+<ul>
+<li><code>Filefd</code> 可以当作 <code>Fd</code> 用</li>
+<li>你也可以把 <code>Fd *</code> 强制转换成 <code>Filefd *</code>，继续操作扩展信息（这就是C语言的特性啦）</li>
+</ul>
+<p><strong>Exercise 5.9</strong> 请完成 user&#x2F;lib&#x2F;file.c 中的 open 函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">open</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *path, <span class="type">int</span> mode)</span> &#123;</span><br><span class="line">	<span class="type">int</span> r;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">Fd</span> *<span class="title">fd</span>;</span></span><br><span class="line">    <span class="comment">//申请一个fd空位</span></span><br><span class="line">	r = fd_alloc(&amp;fd);</span><br><span class="line">	<span class="keyword">if</span> (r) &#123;</span><br><span class="line">		<span class="keyword">return</span> r;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//发送open请求给文件系统服务</span></span><br><span class="line">	r = fsipc_open(path, mode, fd);</span><br><span class="line">	<span class="keyword">if</span> (r) &#123;</span><br><span class="line">		<span class="keyword">return</span> r;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="type">char</span> *va;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">Filefd</span> *<span class="title">ffd</span>;</span></span><br><span class="line">	u_int size, fileid;</span><br><span class="line">    <span class="comment">//fd2data(fd) 得到的是与这个 fd 对应的文件内容缓存区的虚拟地址</span></span><br><span class="line">	va = fd2data(fd);</span><br><span class="line">	ffd = (<span class="keyword">struct</span> Filefd *)fd;</span><br><span class="line">    <span class="comment">//读取文件大小和ID</span></span><br><span class="line">	size = ffd-&gt;f_file.f_size;</span><br><span class="line">	fileid = ffd-&gt;f_fileid;</span><br><span class="line">    <span class="comment">//把整个文件内容映射到内存中，最终可以像操作普通内存一样操作文件内容啦~</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; size; i += PTMAP) &#123;</span><br><span class="line">		r = fsipc_map(fileid, i, va + i);</span><br><span class="line">		<span class="keyword">if</span> (r) &#123;</span><br><span class="line">			<span class="keyword">return</span> r;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//返回这个 fd 的编号</span></span><br><span class="line">	<span class="keyword">return</span> fd2num(fd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Exercise 5.10</strong> 参考 user&#x2F;lib&#x2F;fd.c 中的 write 函数，完成 read 函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">read</span><span class="params">(<span class="type">int</span> fdnum, <span class="type">void</span> *buf, u_int n)</span> &#123;</span><br><span class="line">	<span class="type">int</span> r;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">Dev</span> *<span class="title">dev</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">Fd</span> *<span class="title">fd</span>;</span></span><br><span class="line">    <span class="comment">//找文件标识符</span></span><br><span class="line">	<span class="keyword">if</span> ((r = fd_lookup(fdnum, &amp;fd)) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> r;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//找设备</span></span><br><span class="line">	<span class="keyword">if</span> ((r = dev_lookup(fd-&gt;fd_dev_id, &amp;dev)) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">		<span class="keyword">return</span> r;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//找权限</span></span><br><span class="line">	<span class="keyword">if</span> ((fd-&gt;fd_omode &amp; O_ACCMODE) == O_WRONLY) &#123;</span><br><span class="line">		<span class="keyword">return</span> -E_INVAL;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//开始读</span></span><br><span class="line">	r = dev-&gt;dev_read(fd, buf, n, fd-&gt;fd_offset);</span><br><span class="line">	<span class="comment">//设置新指针</span></span><br><span class="line">	<span class="keyword">if</span> (r &gt; <span class="number">0</span>) &#123;</span><br><span class="line">		fd-&gt;fd_offset += r;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> r;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-2-文件系统服务"><a href="#4-2-文件系统服务" class="headerlink" title="4.2 文件系统服务"></a>4.2 文件系统服务</h4><p>MOS 操作系统中的文件系统服务通过 IPC 的形式供其他进程调用，进行文件读写操作。</p>
+<p>用户进程需要进行文件操作时，使用 ipc_send、ipc_recv 与 fs_serv 进行交互</p>
+<p><code>fs_serv</code> 的主函数先做初始化工作，建立一个“文件打开表” <code>opentab</code>，用来记录有哪些文件被哪些进程打开了。</p>
+<p>接着它会去初始化整个文件系统，知道磁盘结构怎么组织的，哪些块是空的、哪些块已经写了内容。</p>
+<p>所有文件系统都靠一个叫“超级块”的结构来记录整个磁盘的布局，<code>fs_init</code> 首先就是把超级块读进来了解磁盘的基本情况。</p>
+<p>一切准备就绪后，它就“上线营业”啦，开始调用 <code>serve()</code> 持续循环地等待和处理用户程序的 IPC 请求。</p>
+<h5 id="💡-第一部分：文件系统支持的操作类型定义"><a href="#💡-第一部分：文件系统支持的操作类型定义" class="headerlink" title="💡 第一部分：文件系统支持的操作类型定义"></a>💡 第一部分：文件系统支持的操作类型定义</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">c复制编辑enum &#123;</span><br><span class="line">  FSREQ_OPEN,      // 打开文件</span><br><span class="line">  FSREQ_MAP,       // 映射文件内容到内存</span><br><span class="line">  FSREQ_SET_SIZE,  // 修改文件大小</span><br><span class="line">  FSREQ_CLOSE,     // 关闭文件</span><br><span class="line">  FSREQ_DIRTY,     // 标记文件为已修改</span><br><span class="line">  FSREQ_REMOVE,    // 删除文件 ← 你要实现的功能</span><br><span class="line">  FSREQ_SYNC,      // 同步磁盘</span><br><span class="line">  MAX_FSREQNO,     // 请求类型的总数</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>📌 文件系统支持的操作都用这类枚举值 <code>FSREQ_*</code> 来标识。例如：</p>
+<ul>
+<li>当用户想<strong>打开文件</strong>时，发出的 IPC 请求类型是 <code>FSREQ_OPEN</code>；</li>
+<li>想<strong>删除文件</strong>时，发送 <code>FSREQ_REMOVE</code> 请求。</li>
+</ul>
+<h5 id="💬-第二部分：用户怎么请求文件操作？"><a href="#💬-第二部分：用户怎么请求文件操作？" class="headerlink" title="💬 第二部分：用户怎么请求文件操作？"></a>💬 第二部分：用户怎么请求文件操作？</h5><blockquote>
+<p>“用户程序在发出文件系统操作请求时，将请求的内容放在对应的结构体中进行消息的传递。”</p>
+</blockquote>
+<p>👉 意思是：用户程序并不是直接调用文件系统的内部函数，而是：</p>
+<ol>
+<li>把请求内容（比如路径、打开模式、要删除哪个文件）填进一个结构体；</li>
+<li>通过 IPC 把这个结构体发送给文件系统服务进程 <code>fs_serv</code>；</li>
+<li><code>fs_serv</code> 根据你填的请求类型（比如是 <code>FSREQ_REMOVE</code>）和参数，来做相应操作。</li>
+</ol>
+<h5 id="🧠-第三部分：fs-serv-怎么处理这些请求？"><a href="#🧠-第三部分：fs-serv-怎么处理这些请求？" class="headerlink" title="🧠 第三部分：fs_serv 怎么处理这些请求？"></a>🧠 第三部分：fs_serv 怎么处理这些请求？</h5><blockquote>
+<p>“fs_serv 进程收到其他进程的 IPC 请求后，IPC 传递的消息包含了请求的类型和其他必要的参数，根据请求的类型执行相应的文件操作（文件的增、删、改、查等）。”</p>
+</blockquote>
+<p>也就是说：</p>
+<ul>
+<li><code>fs_serv</code> 是一个“文件服务中心”，随时监听是否有 IPC 请求。</li>
+<li>它接到一个请求后，先看这个请求的类型（比如是 <code>FSREQ_REMOVE</code>）。</li>
+<li>然后去执行相应的文件操作逻辑（比如查找这个路径、从磁盘上删除文件结构等等）。</li>
+<li>最后通过 IPC 把结果（成功&#x2F;失败）返回给请求它的用户进程。</li>
+</ul>
+<p><strong>Exercise 5.11</strong> 完成 fs&#x2F;serv.c 中的 serve_remove 函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">serve_remove</span><span class="params">(u_int envid, <span class="keyword">struct</span> Fsreq_remove *rq)</span> &#123;</span><br><span class="line">	<span class="type">int</span> r;</span><br><span class="line">	r = file_remove(rq-&gt;req_path);</span><br><span class="line">	ipc_send(envid, r, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Exercise 5.12</strong> 完成 user&#x2F;lib&#x2F;fsipc.c 中的 fsipc_remove 函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">fsipc_remove</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *path)</span> &#123;</span><br><span class="line">	<span class="keyword">if</span> (path[<span class="number">0</span>] == <span class="string">&#x27;\0&#x27;</span> || <span class="built_in">strlen</span>(path) &gt;= MAXPATHLEN) &#123;</span><br><span class="line">		<span class="keyword">return</span> -E_BAD_PATH;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">Fsreq_remove</span> *<span class="title">req</span> =</span> (<span class="keyword">struct</span> Fsreq_remove *)fsipcbuf;</span><br><span class="line">	<span class="built_in">strcpy</span>((<span class="type">char</span> *)req-&gt;req_path, path);</span><br><span class="line">	<span class="keyword">return</span> fsipc(FSREQ_REMOVE, req, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>Exercise 5.13</strong> 完成 user&#x2F;lib&#x2F;file.c 中的 remove 函数。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">remove</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *path)</span> </span><br><span class="line">  <span class="keyword">return</span> <span class="title function_">fsipc_remove</span><span class="params">(path)</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>remove</code>（user&#x2F;lib&#x2F;file.c）</strong></p>
+<ul>
+<li>这是用户进程调用的接口函数，也就是用户代码里调用 <code>remove(path)</code> 就会执行这个函数。</li>
+<li>它实际上调用了 <code>fsipc_remove</code>，把删除请求转发给文件系统服务。</li>
+</ul>
+<p><strong><code>fsipc_remove</code>（user&#x2F;lib&#x2F;fsipc.c）</strong></p>
+<ul>
+<li>这是用户进程和文件系统服务之间的 IPC 通信层函数。</li>
+<li>它负责把删除请求（路径信息）封装成消息，通过 IPC 发送给文件系统服务进程。</li>
+<li>类似于“消息打包+发出”的角色。</li>
+</ul>
+<p><strong><code>serve_remove</code>（fs&#x2F;serv.c）</strong></p>
+<ul>
+<li>这是文件系统服务进程接收到删除请求后的处理函数。</li>
+<li>它调用内核级的 <code>file_remove</code> 函数执行真正的删除操作。</li>
+<li>处理完后，把删除结果通过 IPC 发送回用户进程。</li>
+</ul>
+<p><strong><code>file_remove</code>（fs&#x2F;file.c）</strong></p>
+<ul>
+<li>这是文件系统的底层具体实现函数，真正修改磁盘数据结构，释放磁盘块，更新目录等。</li>
+<li>是删除操作的核心实现，负责完成“删除文件”的实际工作。</li>
+</ul>
+<h5 id="🧠-总结一句话"><a href="#🧠-总结一句话" class="headerlink" title="🧠 总结一句话"></a>🧠 总结一句话</h5><blockquote>
+<p><code>file.c</code> 发起请求 → <code>fsipc.c</code> 封装请求发 IPC → <code>serv.c</code> 主循环派发处理 → <code>fs.c</code> 执行逻辑 → <code>ide.c</code> 操作磁盘。</p>
+</blockquote>
+<p>同时，感觉这个层级关系一直在lab5中有所涉及。。。所以我也总结了一些别的层级！</p>
+<blockquote>
+<p>用户态 → <code>read()</code> → <code>file_read()</code> → <code>ide_read()</code> → <code>syscall_read_dev()</code> → <code>sys_read_dev()</code> → 读取寄存器数据 → 返回内容</p>
+</blockquote>
+<ul>
+<li><p><code>tools/fsformat.c:create_file</code>：在 <strong>构建磁盘镜像阶段</strong>，往空白磁盘上写入初始文件（创建根目录、文件等）。它是离线操作，在用户使用文件系统前执行。</p>
+<p>🛠️ 文件系统构建阶段（<code>tools/fsformat.c</code>）</p>
+<p>⚙️ 运行时文件系统服务（<code>fs/fs.c</code>, <code>fs/serv.c</code>）</p>
+</li>
+</ul>
+<h3 id="🧱-Lab5-涉及的四个关键层级（从高到低）："><a href="#🧱-Lab5-涉及的四个关键层级（从高到低）：" class="headerlink" title="🧱 Lab5 涉及的四个关键层级（从高到低）："></a>🧱 Lab5 涉及的四个关键层级（从高到低）：</h3><table>
+<thead>
+<tr>
+<th>层级</th>
+<th>文件</th>
+<th>作用</th>
+<th>举例函数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>🟩 <strong>应用层（用户库）</strong></td>
+<td><code>user/lib/file.c</code>, <code>fsipc.c</code></td>
+<td>发出文件操作请求</td>
+<td><code>remove()</code>, <code>fsipc_remove()</code></td>
+</tr>
+<tr>
+<td>🟨 <strong>文件系统服务（服务端）</strong></td>
+<td><code>fs/serv.c</code>, <code>fs/fs.c</code></td>
+<td>接收 IPC 请求并调用核心逻辑</td>
+<td><code>serve_remove()</code>, <code>file_remove()</code></td>
+</tr>
+<tr>
+<td>🟦 <strong>磁盘操作层（设备驱动）</strong></td>
+<td><code>fs/ide.c</code></td>
+<td>通过寄存器操作 IDE 磁盘</td>
+<td><code>ide_read()</code>, <code>ide_write()</code></td>
+</tr>
+<tr>
+<td>🟥 <strong>内核系统调用层</strong></td>
+<td><code>syscall.c</code>, <code>dev.c</code></td>
+<td>设备读写接口封装，实际访问寄存器</td>
+<td><code>syscall_read_dev()</code>, <code>syscall_write_dev()</code></td>
+</tr>
+</tbody></table>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="http://Nice2cu22.github.io">Nice2cu</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="http://nice2cu22.github.io/2025/05/27/OS_Lab5/">http://nice2cu22.github.io/2025/05/27/OS_Lab5/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles on this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless otherwise stated.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/BUAA-OS/">BUAA_OS</a></div><div class="post-share"><div class="social-share" data-image="/img/top-default.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/05/08/OS_Lab4/" title="OS-Lab4"><img class="cover" src="/img/top-default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">Previous</div><div class="info-item-2">OS-Lab4</div></div><div class="info-2"><div class="info-item-1">#OS-Lab4 OS_Lab4感觉lab4和lab3都比lab2好一些，笨人以为五一玩脱了之后根本来不及学了，，，没想到看着竟然还行。。。可能这就是受lab2和lab3摧残之后的结果吧，这篇文章记录一下学习lab4的心路历程。其实更重要的是想自己写一遍加深一下印象！ 从实验目的开始：  掌握系统调用的概念及流程 实现进程间通信机制 实现 fork 函数 掌握页写入异常的处理流程  1.系统调用1.1 用户态与内核态 用户进程在特定场景下需要执行只能由内核完成的操作（如硬件操作、动态分配内存、与其他进程进行通信）。由于在内核态执行用户程序的代码不安全，因此操作系统设计了一系列内核空间中的函数，当用户进行需要操作时，会引发特定的异常陷入内核态，由内核调用对应的函数。这种机制叫做系统调用  用户进程&amp;内核：进程是资源分配与调度的基本单位，拥有独立的地址空间。内核负责管理系统资源和调度进程，使得进程能够并发执行。二者并不是对立的存在，可认为内核时存在于所有地址空间中的一段代码。 人话版：每个进程的地址空间被划分成两部分：用户态和内核态。 1.2 系统调用实例 用户调用...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/04/22/OS-Lab3/" title="OS-Lab3"><img class="cover" src="/img/top-default.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-04-22</div><div class="info-item-2">OS-Lab3</div></div><div class="info-2"><div class="info-item-1">#OS-Lab3 OS_Lab3感觉lab3看着没有lab2那么晦涩难懂，可能是写lab2的时候完全搞不懂内存管理的机制，搞不懂内核地址和用户地址这些（而且你又不看ppt）。然后这篇文章就简单记录一下学习lab3的心路历程。 首先还是从lab3的实验目的开始：  创建一个进程并成功运行 实现时钟中断，通过时钟中断内核可以再次获得执行权 实现进程调度，创建两个进程，并且通过时钟中断切换进程执行   在Lab3中将运行一个用户模式的进程：使用数据结构进程控制块Env来跟踪用户进程，并建立一个简单的用户进程，再加载一个程序镜像到指定的内存空间，让他运行起来。  虽然这段话感觉有很多词都不明白，我们来依次解释一下：  用户模式： 🧠 用户模式是 CPU 的一种“低权限运行状态”，操作系统中有两种模式：    模式 特点    🧍‍♂️ 用户模式 限制权限，只能访问用户空间，不能执行特权指令   🧠 内核模式 全部权限，能执行系统指令、操作硬件   例如user/hello.c、user/fault.c 这些 ELF...</div></div></div></a><a class="pagination-related" href="/2025/05/08/OS_Lab4/" title="OS-Lab4"><img class="cover" src="/img/top-default.jpg" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-05-08</div><div class="info-item-2">OS-Lab4</div></div><div class="info-2"><div class="info-item-1">#OS-Lab4 OS_Lab4感觉lab4和lab3都比lab2好一些，笨人以为五一玩脱了之后根本来不及学了，，，没想到看着竟然还行。。。可能这就是受lab2和lab3摧残之后的结果吧，这篇文章记录一下学习lab4的心路历程。其实更重要的是想自己写一遍加深一下印象！ 从实验目的开始：  掌握系统调用的概念及流程 实现进程间通信机制 实现 fork 函数 掌握页写入异常的处理流程  1.系统调用1.1 用户态与内核态 用户进程在特定场景下需要执行只能由内核完成的操作（如硬件操作、动态分配内存、与其他进程进行通信）。由于在内核态执行用户程序的代码不安全，因此操作系统设计了一系列内核空间中的函数，当用户进行需要操作时，会引发特定的异常陷入内核态，由内核调用对应的函数。这种机制叫做系统调用  用户进程&amp;内核：进程是资源分配与调度的基本单位，拥有独立的地址空间。内核负责管理系统资源和调度进程，使得进程能够并发执行。二者并不是对立的存在，可认为内核时存在于所有地址空间中的一段代码。 人话版：每个进程的地址空间被划分成两部分：用户态和内核态。 1.2 系统调用实例 用户调用...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/my-avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Nice2cu</div><div class="author-info-description">ENFP快乐疯狗经典款</div><div class="site-data"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">1</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content"><p>🚀 欢迎登录知识异次元空间！🔮</p></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#OS-Lab5"><span class="toc-number">1.</span> <span class="toc-text">OS_Lab5</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%A6%82%E8%BF%B0"><span class="toc-number">1.0.1.</span> <span class="toc-text">1.文件系统概述</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0"><span class="toc-number">1.0.1.1.</span> <span class="toc-text">1.1文件系统的设计与实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%A3%81%E7%9B%98%E9%A9%B1%E5%8A%A8"><span class="toc-number">1.0.2.</span> <span class="toc-text">2.磁盘驱动</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-1-%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">2.1 内存映射</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-%E2%80%9C%E8%AE%BE%E5%A4%87%E6%98%AF%E6%80%8E%E4%B9%88%E5%92%8C-CPU-%E9%80%9A%E4%BF%A1%E7%9A%84%EF%BC%9F%E2%80%9D"><span class="toc-number">1.0.2.1.1.</span> <span class="toc-text">1. “设备是怎么和 CPU 通信的？”</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-%E2%80%9C%E5%A4%96%E8%AE%BE%E5%AF%84%E5%AD%98%E5%99%A8%E6%98%AF%E6%80%8E%E4%B9%88%E6%89%BE%E5%88%B0%E7%9A%84%EF%BC%9F%E2%80%9D"><span class="toc-number">1.0.2.1.2.</span> <span class="toc-text">2. “外设寄存器是怎么找到的？”</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3-%E2%80%9CMIPS-%E6%9E%B6%E6%9E%84%E7%94%A8%E5%93%AA%E5%9D%97%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E6%9D%A5%E8%AE%BF%E9%97%AE%E8%AE%BE%E5%A4%87%EF%BC%9F%E2%80%9D"><span class="toc-number">1.0.2.1.3.</span> <span class="toc-text">3. “MIPS 架构用哪块地址空间来访问设备？”</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-IDE%E7%A3%81%E7%9B%98"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">2.2 IDE磁盘</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-%E9%A9%B1%E5%8A%A8%E7%A8%8B%E5%BA%8F%E7%BC%96%E5%86%99"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">2.3 驱动程序编写</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%BB%93%E6%9E%84"><span class="toc-number">1.0.3.</span> <span class="toc-text">3.文件系统结构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#3-1%E7%A3%81%E7%9B%98%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B8%83%E5%B1%80"><span class="toc-number">1.0.3.1.</span> <span class="toc-text">3.1磁盘文件系统布局</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-2-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E8%AF%A6%E7%BB%86%E7%BB%93%E6%9E%84"><span class="toc-number">1.0.3.2.</span> <span class="toc-text">3.2 文件系统详细结构</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%A7%B1-%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E6%96%87%E4%BB%B6%E6%8E%A7%E5%88%B6%E5%9D%97%EF%BC%88struct-File%EF%BC%89%EF%BC%9F"><span class="toc-number">1.0.3.2.1.</span> <span class="toc-text">🧱 一、什么是文件控制块（struct File）？</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-3-%E5%9D%97%E7%BC%93%E5%AD%98"><span class="toc-number">1.0.3.3.</span> <span class="toc-text">3.3 块缓存</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%94%A8%E6%88%B7%E6%8E%A5%E5%8F%A3"><span class="toc-number">1.0.4.</span> <span class="toc-text">4 文件系统的用户接口</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">4.1 文件描述符</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%92%A11-%E4%BB%80%E4%B9%88%E6%98%AF%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%EF%BC%88fd%EF%BC%89%EF%BC%9F"><span class="toc-number">1.0.4.1.1.</span> <span class="toc-text">💡1. 什么是文件描述符（fd）？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%A7%A02-%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E5%86%85%E9%83%A8%E5%85%B6%E5%AE%9E%E5%AD%98%E4%BA%86%E5%BE%88%E5%A4%9A%E4%BF%A1%E6%81%AF"><span class="toc-number">1.0.4.1.2.</span> <span class="toc-text">🧠2. 文件描述符内部其实存了很多信息</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%93%A63-Filefd-%E6%98%AF-Fd-%E7%9A%84%E2%80%9C%E5%8D%87%E7%BA%A7%E7%89%88%E2%80%9D"><span class="toc-number">1.0.4.1.3.</span> <span class="toc-text">📦3. Filefd 是 Fd 的“升级版”</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%9C%8D%E5%8A%A1"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">4.2 文件系统服务</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%92%A1-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%EF%BC%9A%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%94%AF%E6%8C%81%E7%9A%84%E6%93%8D%E4%BD%9C%E7%B1%BB%E5%9E%8B%E5%AE%9A%E4%B9%89"><span class="toc-number">1.0.4.2.1.</span> <span class="toc-text">💡 第一部分：文件系统支持的操作类型定义</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%92%AC-%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%9A%E7%94%A8%E6%88%B7%E6%80%8E%E4%B9%88%E8%AF%B7%E6%B1%82%E6%96%87%E4%BB%B6%E6%93%8D%E4%BD%9C%EF%BC%9F"><span class="toc-number">1.0.4.2.2.</span> <span class="toc-text">💬 第二部分：用户怎么请求文件操作？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%A7%A0-%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86%EF%BC%9Afs-serv-%E6%80%8E%E4%B9%88%E5%A4%84%E7%90%86%E8%BF%99%E4%BA%9B%E8%AF%B7%E6%B1%82%EF%BC%9F"><span class="toc-number">1.0.4.2.3.</span> <span class="toc-text">🧠 第三部分：fs_serv 怎么处理这些请求？</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%F0%9F%A7%A0-%E6%80%BB%E7%BB%93%E4%B8%80%E5%8F%A5%E8%AF%9D"><span class="toc-number">1.0.4.2.4.</span> <span class="toc-text">🧠 总结一句话</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%F0%9F%A7%B1-Lab5-%E6%B6%89%E5%8F%8A%E7%9A%84%E5%9B%9B%E4%B8%AA%E5%85%B3%E9%94%AE%E5%B1%82%E7%BA%A7%EF%BC%88%E4%BB%8E%E9%AB%98%E5%88%B0%E4%BD%8E%EF%BC%89%EF%BC%9A"><span class="toc-number">1.0.5.</span> <span class="toc-text">🧱 Lab5 涉及的四个关键层级（从高到低）：</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Posts</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2025/05/27/OS_Lab5/" title="OS-Lab5"><img src="/img/top-default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OS-Lab5"/></a><div class="content"><a class="title" href="/2025/05/27/OS_Lab5/" title="OS-Lab5">OS-Lab5</a><time datetime="2025-05-27T15:01:31.000Z" title="Created 2025-05-27 23:01:31">2025-05-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/05/08/OS_Lab4/" title="OS-Lab4"><img src="/img/top-default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OS-Lab4"/></a><div class="content"><a class="title" href="/2025/05/08/OS_Lab4/" title="OS-Lab4">OS-Lab4</a><time datetime="2025-05-08T02:29:00.000Z" title="Created 2025-05-08 10:29:00">2025-05-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/04/22/OS-Lab3/" title="OS-Lab3"><img src="/img/top-default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="OS-Lab3"/></a><div class="content"><a class="title" href="/2025/04/22/OS-Lab3/" title="OS-Lab3">OS-Lab3</a><time datetime="2025-04-22T12:14:31.000Z" title="Created 2025-04-22 20:14:31">2025-04-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/04/13/%E4%BB%A3%E7%A0%81%E5%9D%97%E6%BC%94%E7%A4%BA/" title="代码演示"><img src="/img/top-banner.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="代码演示"/></a><div class="content"><a class="title" href="/2025/04/13/%E4%BB%A3%E7%A0%81%E5%9D%97%E6%BC%94%E7%A4%BA/" title="代码演示">代码演示</a><time datetime="2025-04-13T06:34:00.000Z" title="Created 2025-04-13 14:34:00">2025-04-13</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/04/12/hello-world/" title="Hello World"><img src="/img/top-default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hello World"/></a><div class="content"><a class="title" href="/2025/04/12/hello-world/" title="Hello World">Hello World</a><time datetime="2025-04-12T13:16:34.061Z" title="Created 2025-04-12 21:16:34">2025-04-12</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;2025 By Nice2cu</span><span class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.4.0-b1</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Reading Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light and Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle Between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Settings"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back to Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
